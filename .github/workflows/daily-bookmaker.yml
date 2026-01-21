@@ -1,0 +1,36 @@
+name: Daily Bookmaker Agent
+
+on:
+  schedule:
+    # Runs at 06:00 UTC every day
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Bookmaker API
+        run: |
+          # You must set BOOKMAKER_API_URL in your GitHub Repository Secrets
+          # Example: https://your-project.pages.dev/api/daily-check
+
+          if [ -z "${{ secrets.BOOKMAKER_API_URL }}" ]; then
+            echo "Error: BOOKMAKER_API_URL secret is not set."
+            echo "Please go to Settings > Secrets and variables > Actions and add BOOKMAKER_API_URL."
+            exit 1
+          fi
+
+          echo "Triggering Agent at ${{ secrets.BOOKMAKER_API_URL }}..."
+
+          response=$(curl -s -w "%{http_code}" -X GET "${{ secrets.BOOKMAKER_API_URL }}")
+          http_code=${response: -3}
+          content=${response:0:${#response}-3}
+
+          echo "Response Code: $http_code"
+          echo "Response Content: $content"
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "Failed to trigger bookmaker agent."
+            exit 1
+          fi
