@@ -1,8 +1,9 @@
 import type { Recommendation } from './types';
 
 export async function sendToSlack(recommendations: Recommendation[], webhookUrl?: string) {
-  // Try to get URL from args, or Astro env
-  const url = webhookUrl || import.meta.env.SLACK_WEBHOOK_URL;
+  // Try to get URL from args, or Astro env (safely checked)
+  const envUrl = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env.SLACK_WEBHOOK_URL : process.env.SLACK_WEBHOOK_URL;
+  const url = webhookUrl || envUrl;
 
   if (!url) {
     console.warn('⚠️ SLACK_WEBHOOK_URL is not defined. Skipping Slack notification.');
